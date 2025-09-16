@@ -80,12 +80,10 @@ class BusCrawler:
         return True
 
     def is_urban_bus_service(self, soup):
-        """Verifica se o ônibus tem 'Serviço Urbano' na página e extrai o nome"""
         bus_info = self.extract_bus_service_info(soup)
         return bus_info is not None
 
     def extract_bus_service_info(self, soup):
-        """Extrai informações do serviço urbano (número da linha e nome do ônibus)"""
         page_text = soup.get_text().replace('\n', ' ').replace('\r', ' ')
 
 
@@ -177,7 +175,7 @@ class BusCrawler:
             }
 
         with self.lock:
-            print(f"❌ Serviço urbano não encontrado")
+            print(f"Serviço urbano não encontrado")
         return None
 
     def get_high_res_image_url(self, image_page_url):
@@ -191,7 +189,7 @@ class BusCrawler:
 
         bus_info = self.extract_bus_service_info(soup)
         if not bus_info:
-            print(f"❌ Não é serviço urbano - pulando: {image_page_url}")
+            print(f"Não é serviço urbano - pulando: {image_page_url}")
             return None
         
         strategies = [
@@ -344,7 +342,7 @@ class BusCrawler:
 
         except requests.RequestException as e:
             with self.lock:
-                print(f"✗ Erro ao baixar {image_url}: {e}")
+                print(f"Erro ao baixar {image_url}: {e}")
             return False
     
     def generate_filename(self, image_url, index, bus_info=None):
@@ -389,8 +387,8 @@ class BusCrawler:
                 return None
 
             with self.lock:
-                print(f"📥 Baixando: {filename}")
-                print(f"🚌 Linha: {bus_info.get('line_number', 'N/A')} - {bus_info.get('bus_name', 'N/A')}")
+                print(f"Baixando: {filename}")
+                print(f"Linha: {bus_info.get('line_number', 'N/A')} - {bus_info.get('bus_name', 'N/A')}")
 
             if self.download_image(high_res_url, filename):
                 return filename
@@ -398,7 +396,7 @@ class BusCrawler:
 
         except Exception as e:
             with self.lock:
-                print(f"❌ Erro no processamento: {e}")
+                print(f"Erro no processamento: {e}")
             return None
 
     def process_images_parallel(self, image_links, page_num):
@@ -417,12 +415,10 @@ class BusCrawler:
                 if result:
                     temp_results[original_index] = (image_link, result)
 
-            # Filtra e mantém ordem
             for item in temp_results:
                 if item is not None:
                     valid_images.append(item)
 
-        # Agora baixa as imagens válidas com numeração sequencial
         downloaded = []
         base_index = (page_num - 1) * 100
 
@@ -438,7 +434,6 @@ class BusCrawler:
                 )
                 future_to_info[future] = (seq_num, image_link)
 
-            # Coleta resultados
             for future in as_completed(future_to_info):
                 result = future.result()
                 if result:
@@ -447,7 +442,6 @@ class BusCrawler:
         return downloaded
 
     def download_validated_image(self, image_data, index):
-        """Baixa uma imagem já validada (serviço urbano confirmado)"""
         try:
             high_res_url = image_data['url']
             bus_info = image_data['bus_info']
@@ -460,8 +454,8 @@ class BusCrawler:
                 return None
 
             with self.lock:
-                print(f"📥 Baixando: {filename}")
-                print(f"🚌 Linha: {bus_info.get('line_number', 'N/A')} - {bus_info.get('bus_name', 'N/A')}")
+                print(f"Baixando: {filename}")
+                print(f"Linha: {bus_info.get('line_number', 'N/A')} - {bus_info.get('bus_name', 'N/A')}")
 
             if self.download_image(high_res_url, filename):
                 return filename
@@ -469,7 +463,7 @@ class BusCrawler:
 
         except Exception as e:
             with self.lock:
-                print(f"❌ Erro no download: {e}")
+                print(f"Erro no download: {e}")
             return None
 
     def get_pagination_urls(self, soup, current_url):
@@ -499,7 +493,7 @@ class BusCrawler:
         return pagination_urls
     
     def crawl_page(self, page_url, page_num=1):
-        print(f"\n📄 Processando página {page_num}: {page_url}")
+        print(f"\nProcessando página {page_num}: {page_url}")
         
         response = self.get_page(page_url)
         if not response:
@@ -508,16 +502,14 @@ class BusCrawler:
         soup = BeautifulSoup(response.text, 'html.parser')
         
         image_links = self.extract_image_links(soup, page_url)
-        print(f"🔍 Encontrados {len(image_links)} links de imagens na página {page_num}")
-        
-        # Processamento paralelo das imagens
+        print(f"Encontrados {len(image_links)} links de imagens na página {page_num}")
+
         downloaded = self.process_images_parallel(image_links, page_num)
-        
         print(f"✅ Página {page_num} concluída: {len(downloaded)} imagens baixadas em alta resolução")
         return image_links
     
     def crawl_website(self, start_url, max_pages=None):
-        print(f"🚀 Iniciando crawler para: {start_url}")
+        print(f"Iniciando crawler para: {start_url}")
         
         visited_urls = set()
         urls_to_visit = [start_url]
@@ -547,10 +539,10 @@ class BusCrawler:
                             urls_to_visit.append(url)
                             print(f"🔗 Nova página encontrada: {url}")
         
-        print(f"\n🎉 Crawler concluído!")
-        print(f"📊 Total de páginas processadas: {page_count}")
-        print(f"📸 Total de imagens encontradas: {total_images}")
-        print(f"📁 Imagens salvas em: {self.download_dir}")
+        print(f"\nCrawler concluído!")
+        print(f"Total de páginas processadas: {page_count}")
+        print(f"Total de imagens encontradas: {total_images}")
+        print(f"Imagens salvas em: {self.download_dir}")
 
 def main():
     base_url = "https://www.onibusbrasil.com"
@@ -558,7 +550,7 @@ def main():
     start_url = input("Digite a URL da página inicial para fazer o crawler: ").strip()
     
     if not start_url:
-        print("❌ URL não fornecida!")
+        print("URL não fornecida!")
         return
     
     download_dir = "onibus_images"
@@ -575,7 +567,7 @@ def main():
     except ValueError:
         workers = 8
 
-    print(f"🚀 Configuração: {workers} threads paralelas")
+    print(f"Configuração: {workers} threads paralelas")
     crawler = BusCrawler(base_url, download_dir, max_workers=workers)
     crawler.crawl_website(start_url, max_pages)
 
